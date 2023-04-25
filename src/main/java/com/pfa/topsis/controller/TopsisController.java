@@ -102,7 +102,7 @@ public class TopsisController {
 
         }
 
-
+        getTopsisWithSens(id,0);
         return list3.getBody().size();
     }
 
@@ -156,102 +156,93 @@ public class TopsisController {
                 new ParameterizedTypeReference<List<Alternative>>(){});
 
         String[] types ={"subtitution-1","subtitution-2","subtitution-3","subtitution-4","subtitution-5","equals","Random"};
-
-
-            double[] weiths22=new double[list3.getBody().size()];
-            if(param==5){
-                for(SousCritere scs :list3.getBody()) {
-                    weiths22[(scs.getIndex())] =1.0/weiths22.length;
-                    System.out.println("weitttttttttttttttttttttttttt   "+(scs.getIndex() + param)%weiths22.length);
+        param=0;
+        for(int i=0;i<7;i++) {
+            matrixagreg=MatrixAggregation.weightedAggregation(cube);
+            double[] weiths22 = new double[list3.getBody().size()];
+            if (param == 5) {
+                for (SousCritere scs : list3.getBody()) {
+                    weiths22[(scs.getIndex())] = 1.0 / weiths22.length;
+                    System.out.println("weitttttttttttttttttttttttttt   " + (scs.getIndex() + param) % weiths22.length);
                 }
-            }else if(param==6){
-                NumberTable table=new NumberTable();
-                int[] t=new int[list3.getBody().size()];
-                for(int l=0;l<list3.getBody().size();l++){
-                    t[l]=l;
+            } else if (param == 6) {
+                NumberTable table = new NumberTable();
+                int[] t = new int[list3.getBody().size()];
+                for (int l = 0; l < list3.getBody().size(); l++) {
+                    t[l] = l;
                 }
-                for(SousCritere scs :list3.getBody()) {
-                    weiths22[NumberTable.getRandomNumberAndRemove(t)] =scs.getPoids();
-                  //  System.out.println("weitttttttttttttttttttttttttt   "+(scs.getIndex() + param)%weiths22.length);
+                for (SousCritere scs : list3.getBody()) {
+                    weiths22[NumberTable.getRandomNumberAndRemove(t)] = scs.getPoids();
+                    //  System.out.println("weitttttttttttttttttttttttttt   "+(scs.getIndex() + param)%weiths22.length);
                     t = Arrays.copyOf(t, t.length - 1);
                 }
 
 
-        }else {
-                for(SousCritere scs :list3.getBody()) {
-                    weiths22[(scs.getIndex() + param)%weiths22.length] =scs.getPoids();
-                    System.out.println("weitttttttttttttttttttttttttt   "+(scs.getIndex() + param)%weiths22.length);
+            } else {
+                for (SousCritere scs : list3.getBody()) {
+                    weiths22[(scs.getIndex() + param) % weiths22.length] = scs.getPoids();
+                    System.out.println("weitttttttttttttttttttttttttt   " + (scs.getIndex() + param) % weiths22.length);
                 }
             }
 
 
             System.out.println(Arrays.toString(weiths22));
-            Ftopsis ftopsis=new Ftopsis(matrixagreg,weiths22);
+            Ftopsis ftopsis = new Ftopsis(matrixagreg, weiths22);
 
-            double[] rank=ftopsis.calcul();
-
-
+            double[] rank = ftopsis.calcul();
 
 
+            // Create a new table to store ranks
+            int[] rankData = new int[rank.length];
 
-        // Create a new table to store ranks
-        int[] rankData = new int[rank.length];
+            // Copy input data to a new array for sorting
+            double[] sortedData = Arrays.copyOf(rank, rank.length);
 
-        // Copy input data to a new array for sorting
-        double[] sortedData = Arrays.copyOf(rank, rank.length);
+            // Sort the input data in ascending order
+            Arrays.sort(sortedData);
 
-        // Sort the input data in ascending order
-        Arrays.sort(sortedData);
-
-        // Loop through the input data and assign ranks
-        for (int i = 0; i < rank.length; i++) {
-            double value = rank[i];
-            int rank1 = Arrays.binarySearch(sortedData, value) + 1;
-            rankData[i] = rank1;
-        }
-
+            // Loop through the input data and assign ranks
+            for (int ii = 0; ii < rank.length; ii++) {
+                double value = rank[ii];
+                int rank1 = Arrays.binarySearch(sortedData, value) + 1;
+                rankData[ii] = rank.length-rank1+1;
+            }
 
 
-
-
-
-
-
-
-
-
-
-        List<Alternative> alternativeList=new ArrayList<>();
-            for(int i=0;i<rank.length;i++){
-                System.out.println("saving "+i);
-                list9.getBody().get(i).setRank(rankData[i]);
-                alternativeList.add(list9.getBody().get(i));
+            List<Alternative> alternativeList = new ArrayList<>();
+            for (int ij = 0; ij < rank.length; ij++) {
+                System.out.println("saving " + ij);
+                list9.getBody().get(ij).setRank(rankData[ij]);
+                alternativeList.add(list9.getBody().get(ij));
 
             }
 
-            AnalyseSens analyseSens=new AnalyseSens(new Projet(id),alternativeList,types[param]);
+            AnalyseSens analyseSens = new AnalyseSens(new Projet(id), alternativeList, types[param]);
             HttpEntity<AnalyseSens> entity = new HttpEntity<>(analyseSens);
-            ResponseEntity<AnalyseSens> list=  restTemplate.exchange(
+            ResponseEntity<AnalyseSens> list = restTemplate.exchange(
                     "http://SERVICE-DONNEES/saveAnaluseSens",
                     HttpMethod.POST,
                     entity,
-                    new ParameterizedTypeReference<AnalyseSens>(){});
+                    new ParameterizedTypeReference<AnalyseSens>() {
+                    });
 
+            param++;
+            System.out.println("/////////////////////////////////////////////////:");
+            System.out.println("final raknkkkkkkkkkkkkkkk");
 
+            System.out.println(Arrays.toString(rank));
+            System.out.println(Arrays.toString(rankData));
 
-
-
-
-
+        }
 
         return null;
     }
 
     @GetMapping("Analysecalcule")
     public void getSens(@PathParam("id") String id){
-        for(int i=0;i<7;i++){
-            getTopsisWithSens(id,i);
-        }
+
+            getTopsisWithSens(id,0);
+
 
     }
 }
