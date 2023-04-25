@@ -3,6 +3,10 @@ package com.pfa.topsis.Models;
 import java.util.Date;
 
 public class Projet {
+    public Projet(String id) {
+        this.id=id;
+    }
+
     @Override
     public String toString() {
         return "Projet{" +
